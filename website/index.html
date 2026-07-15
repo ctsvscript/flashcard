@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flashcard Ôn Tập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="board">
+    <header class="board-header">
+      <h1 class="chalk-title">Flashcard Ôn Tập</h1>
+      <p class="chalk-sub">Chọn chủ đề &rarr; lật thẻ &rarr; học thuộc</p>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="Danh sách chủ đề">
+      <div class="tabs-loading" id="tabsLoading">Đang tải danh sách chủ đề…</div>
+    </nav>
+
+    <main class="stage" id="stage" hidden>
+      <div class="deck-meta">
+        <span class="deck-name" id="deckName"></span>
+        <span class="deck-progress" id="deckProgress"></span>
+      </div>
+
+      <div class="card-wrap">
+        <button class="nav-arrow nav-prev" id="prevBtn" aria-label="Thẻ trước">&#8592;</button>
+
+        <div class="card" id="card" tabindex="0" role="button" aria-label="Nhấn để lật thẻ">
+          <div class="card-inner" id="cardInner">
+            <div class="card-face card-front">
+              <div class="tag-pin" id="frontTag"></div>
+              <div class="card-scroll">
+                <p class="q-text" id="qText"></p>
+                <img class="q-img" id="qImg" alt="" hidden />
+              </div>
+              <span class="flip-hint">chạm để xem đáp án</span>
+            </div>
+            <div class="card-face card-back">
+              <div class="level-dots" id="levelDots"></div>
+              <div class="card-scroll">
+                <p class="a-label">Đáp án</p>
+                <p class="a-text" id="aText"></p>
+                <p class="e-text" id="eText"></p>
+              </div>
+              <span class="flip-hint">chạm để xem câu hỏi</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="nav-arrow nav-next" id="nextBtn" aria-label="Thẻ sau">&#8594;</button>
+      </div>
+
+      <div class="controls">
+        <button class="chalk-btn" id="shuffleBtn">🔀 Xáo lại</button>
+        <button class="chalk-btn" id="restartBtn">↺ Học lại từ đầu</button>
+      </div>
+    </main>
+
+    <p class="empty-state" id="emptyState" hidden></p>
+  </div>
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
