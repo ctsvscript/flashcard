@@ -8,5 +8,5 @@ const CONFIG = {
   // Đường dẫn gốc tới ảnh trên GitHub (raw), thay <username> và <repo>
   // Ảnh trong Sheet lưu dạng: images/ten-mon/ten-file.jpg
   // -> link đầy đủ = GITHUB_RAW_BASE + giá trị cột "Ảnh"
-  GITHUB_RAW_BASE: "https://raw.githubusercontent.com/<username>/<repo>/main/",
+  GITHUB_RAW_BASE: "https://raw.githubusercontent.com/ctsvscript/flashcard/main/",
 };
