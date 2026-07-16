@@ -8,24 +8,35 @@
   const deckProgressEl = document.getElementById("deckProgress");
 
   const cardEl = document.getElementById("card");
-  const cardInnerEl = document.getElementById("cardInner");
+  const frontContentEl = document.getElementById("frontContent");
+  const frontImageWrapEl = document.getElementById("frontImageWrap");
   const qTextEl = document.getElementById("qText");
   const qImgEl = document.getElementById("qImg");
   const frontTagEl = document.getElementById("frontTag");
   const aTextEl = document.getElementById("aText");
   const eTextEl = document.getElementById("eText");
-  const levelDotsEl = document.getElementById("levelDots");
+  const levelStarsEl = document.getElementById("levelStars");
 
   const prevBtn = document.getElementById("prevBtn");
   const nextBtn = document.getElementById("nextBtn");
   const shuffleBtn = document.getElementById("shuffleBtn");
   const restartBtn = document.getElementById("restartBtn");
 
+  // Lightbox elements
+  const lightboxEl = document.getElementById("lightbox");
+  const lightboxImgEl = document.getElementById("lightboxImg");
+  const lightboxStageEl = document.getElementById("lightboxStage");
+  const lbZoomIn = document.getElementById("lbZoomIn");
+  const lbZoomOut = document.getElementById("lbZoomOut");
+  const lbZoomReset = document.getElementById("lbZoomReset");
+  const lbClose = document.getElementById("lbClose");
+
   let currentSubject = null;
   let originalDeck = [];
   let deck = [];
   let index = 0;
   let flipped = false;
+  let zoomScale = 1;
 
   function apiUrl(params) {
     const base = CONFIG.APPS_SCRIPT_URL;
@@ -124,22 +135,28 @@
 
     const imgVal = (card["Ảnh"] || "").toString().trim();
     if (imgVal) {
-      qImgEl.src = CONFIG.GITHUB_RAW_BASE.replace(/\/$/, "") + "/" + imgVal.replace(/^\//, "");
+      const src = CONFIG.GITHUB_RAW_BASE.replace(/\/$/, "") + "/" + imgVal.replace(/^\//, "");
+      qImgEl.src = src;
       qImgEl.hidden = false;
+      frontImageWrapEl.classList.remove("is-empty");
+      frontContentEl.classList.remove("no-image");
     } else {
       qImgEl.hidden = true;
       qImgEl.removeAttribute("src");
+      frontImageWrapEl.classList.add("is-empty");
+      frontContentEl.classList.add("no-image");
     }
 
     aTextEl.textContent = card["Đáp án"] || "";
     eTextEl.textContent = card["Giải thích"] || "";
 
-    const level = parseInt(card["Mức độ"], 10) || 0;
-    levelDotsEl.innerHTML = "";
+    const level = Math.min(5, Math.max(0, parseInt(card["Mức độ"], 10) || 0));
+    levelStarsEl.innerHTML = "";
     for (let i = 1; i <= 5; i++) {
-      const dot = document.createElement("span");
-      if (i <= level) dot.classList.add("on");
-      levelDotsEl.appendChild(dot);
+      const star = document.createElement("span");
+      star.className = "star" + (i <= level ? " on" : "");
+      star.textContent = i <= level ? "★" : "☆";
+      levelStarsEl.appendChild(star);
     }
 
     prevBtn.disabled = index === 0;
@@ -165,12 +182,18 @@
     }
   }
 
+  // Clicking the card flips it — except clicking the image, which opens the lightbox instead.
   cardEl.addEventListener("click", flip);
   cardEl.addEventListener("keydown", (e) => {
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
       flip();
     }
+  });
+
+  frontImageWrapEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!qImgEl.hidden && qImgEl.src) openLightbox(qImgEl.src);
   });
 
   nextBtn.addEventListener("click", goNext);
@@ -189,11 +212,66 @@
   });
 
   document.addEventListener("keydown", (e) => {
+    if (!lightboxEl.hidden) {
+      if (e.key === "Escape") closeLightbox();
+      return;
+    }
     if (stageEl.hidden) return;
     if (e.target.tagName === "BUTTON") return;
     if (e.key === "ArrowRight") goNext();
     if (e.key === "ArrowLeft") goPrev();
   });
+
+  // ---------- Lightbox (zoom in/out on the illustration image) ----------
+  function openLightbox(src) {
+    lightboxImgEl.src = src;
+    zoomScale = 1;
+    applyZoom();
+    lightboxEl.hidden = false;
+  }
+
+  function closeLightbox() {
+    lightboxEl.hidden = true;
+    lightboxImgEl.src = "";
+  }
+
+  function applyZoom() {
+    lightboxImgEl.style.transform = `scale(${zoomScale})`;
+    lbZoomReset.textContent = Math.round(zoomScale * 100) + "%";
+  }
+
+  lbZoomIn.addEventListener("click", () => {
+    zoomScale = Math.min(4, zoomScale + 0.25);
+    applyZoom();
+  });
+  lbZoomOut.addEventListener("click", () => {
+    zoomScale = Math.max(0.5, zoomScale - 0.25);
+    applyZoom();
+  });
+  lbZoomReset.addEventListener("click", () => {
+    zoomScale = 1;
+    applyZoom();
+  });
+  lbClose.addEventListener("click", closeLightbox);
+
+  // Click on the dark backdrop (not on the image itself) closes the lightbox
+  lightboxStageEl.addEventListener("click", (e) => {
+    if (e.target === lightboxStageEl) closeLightbox();
+  });
+
+  // Scroll wheel to zoom while hovering the image
+  lightboxStageEl.addEventListener(
+    "wheel",
+    (e) => {
+      if (lightboxEl.hidden) return;
+      e.preventDefault();
+      zoomScale = e.deltaY < 0
+        ? Math.min(4, zoomScale + 0.15)
+        : Math.max(0.5, zoomScale - 0.15);
+      applyZoom();
+    },
+    { passive: false }
+  );
 
   loadSubjects();
 })();
