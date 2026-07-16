@@ -4,15 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Flashcard Ôn Tập — ĐH Y Dược Buôn Ma Thuột</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="style.css" />
+<!-- v4: nếu vẫn thấy giao diện cũ, đổi số ?v=4 dưới đây thành ?v=5, 6... để ép trình duyệt tải lại -->
+<link rel="stylesheet" href="style.css?v=4" />
 </head>
 <body>
 
   <header class="topbar">
     <div class="topbar-inner">
-      <img class="brand-logo" src="https://raw.githubusercontent.com/vmtienbmu99/cameratest/refs/heads/main/assets/logo.png" alt="Đại học Y Dược Buôn Ma Thuột" />
+      <img
+        class="brand-logo"
+        src="https://raw.githubusercontent.com/vmtienbmu99/cameratest/refs/heads/main/assets/logo.png"
+        alt="Đại học Y Dược Buôn Ma Thuột"
+        width="120"
+        height="54"
+        style="width:120px;height:54px;max-width:120px;max-height:54px;object-fit:contain;display:block;" />
       <div class="brand-text">
         <h1 class="brand-title">Flashcard Ôn Tập</h1>
         <p class="brand-sub">Chọn chủ đề · lật thẻ · học thuộc</p>
@@ -37,7 +42,7 @@
         <div class="card" id="card" tabindex="0" role="button" aria-label="Nhấn để lật thẻ">
           <div class="card-inner" id="cardInner">
 
-            <div class="card-face card-front">
+            <div class="card-face card-front" id="cardFront">
               <div class="tag-pin" id="frontTag"></div>
               <div class="front-content" id="frontContent">
                 <div class="front-text">
@@ -51,7 +56,7 @@
               <span class="flip-hint">chạm vào phần chữ để xem đáp án</span>
             </div>
 
-            <div class="card-face card-back">
+            <div class="card-face card-back" id="cardBack">
               <div class="level-row">
                 <span class="level-label">Độ khó</span>
                 <span class="level-stars" id="levelStars"></span>
@@ -92,7 +97,7 @@
     </div>
   </div>
 
-<script src="config.js"></script>
-<script src="script.js"></script>
+<script src="config.js?v=4"></script>
+<script src="script.js?v=4"></script>
 </body>
 </html>
