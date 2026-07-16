@@ -1,277 +1,443 @@
-(function () {
-  const tabsEl = document.getElementById("tabs");
-  const tabsLoading = document.getElementById("tabsLoading");
-  const stageEl = document.getElementById("stage");
-  const emptyStateEl = document.getElementById("emptyState");
+:root {
+  --primary: #d6293e;
+  --primary-dark: #a81f30;
+  --primary-soft: #fbe9eb;
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --border: #e3e6ed;
+  --text: #262b33;
+  --text-muted: #7c8698;
+  --radius-lg: 16px;
+  --radius-md: 10px;
+  --shadow: 0 2px 6px rgba(20, 24, 33, 0.06), 0 10px 24px rgba(20, 24, 33, 0.06);
+}
 
-  const deckNameEl = document.getElementById("deckName");
-  const deckProgressEl = document.getElementById("deckProgress");
+* { box-sizing: border-box; }
 
-  const cardEl = document.getElementById("card");
-  const frontContentEl = document.getElementById("frontContent");
-  const frontImageWrapEl = document.getElementById("frontImageWrap");
-  const qTextEl = document.getElementById("qText");
-  const qImgEl = document.getElementById("qImg");
-  const frontTagEl = document.getElementById("frontTag");
-  const aTextEl = document.getElementById("aText");
-  const eTextEl = document.getElementById("eText");
-  const levelStarsEl = document.getElementById("levelStars");
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+}
 
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-  const shuffleBtn = document.getElementById("shuffleBtn");
-  const restartBtn = document.getElementById("restartBtn");
+/* ---------- Top bar ---------- */
+.topbar {
+  background: var(--surface);
+  border-bottom: 3px solid var(--primary);
+  box-shadow: 0 1px 3px rgba(20,24,33,0.05);
+}
 
-  // Lightbox elements
-  const lightboxEl = document.getElementById("lightbox");
-  const lightboxImgEl = document.getElementById("lightboxImg");
-  const lightboxStageEl = document.getElementById("lightboxStage");
-  const lbZoomIn = document.getElementById("lbZoomIn");
-  const lbZoomOut = document.getElementById("lbZoomOut");
-  const lbZoomReset = document.getElementById("lbZoomReset");
-  const lbClose = document.getElementById("lbClose");
+.topbar-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
 
-  let currentSubject = null;
-  let originalDeck = [];
-  let deck = [];
-  let index = 0;
-  let flipped = false;
-  let zoomScale = 1;
+.brand-logo {
+  width: auto;
+  height: 54px;
+  max-width: 120px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
 
-  function apiUrl(params) {
-    const base = CONFIG.APPS_SCRIPT_URL;
-    const query = params ? "?" + new URLSearchParams(params).toString() : "";
-    return base + query;
-  }
+.brand-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin: 0;
+  color: var(--text);
+}
 
-  function showError(msg) {
-    tabsLoading.hidden = false;
-    tabsLoading.textContent = msg;
-    stageEl.hidden = true;
-  }
+.brand-sub {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
 
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+/* ---------- Page ---------- */
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
 
-  async function loadSubjects() {
-    try {
-      const res = await fetch(apiUrl());
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      renderTabs(data.subjects || []);
-    } catch (err) {
-      showError(
-        "Không tải được danh sách chủ đề. Kiểm tra lại APPS_SCRIPT_URL trong config.js."
-      );
-      console.error(err);
-    }
-  }
+/* ---------- Tabs ---------- */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+  padding-bottom: 2px;
+}
 
-  function renderTabs(subjects) {
-    tabsLoading.hidden = true;
-    tabsEl.innerHTML = "";
-    if (!subjects.length) {
-      showError("Chưa có sheet (chủ đề) nào trong file Google Sheet.");
-      return;
-    }
-    subjects.forEach((name, i) => {
-      const btn = document.createElement("button");
-      btn.className = "tab-btn";
-      btn.textContent = name;
-      btn.setAttribute("role", "tab");
-      btn.addEventListener("click", () => selectSubject(name, btn));
-      tabsEl.appendChild(btn);
-      if (i === 0) selectSubject(name, btn);
-    });
-  }
+.tabs-loading, .empty-state {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  padding: 8px 4px;
+}
 
-  async function selectSubject(name, btnEl) {
-    [...tabsEl.children].forEach((b) => b.classList.remove("active"));
-    if (btnEl) btnEl.classList.add("active");
-    currentSubject = name;
-    stageEl.hidden = true;
-    emptyStateEl.hidden = true;
+.tab-btn {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 9px 14px 10px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
 
-    try {
-      const res = await fetch(apiUrl({ subject: name }));
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      originalDeck = data.cards || [];
-      if (!originalDeck.length) {
-        emptyStateEl.hidden = false;
-        emptyStateEl.textContent = `Sheet "${name}" chưa có câu hỏi nào.`;
-        return;
-      }
-      deck = shuffle(originalDeck);
-      index = 0;
-      flipped = false;
-      stageEl.hidden = false;
-      renderCard();
-    } catch (err) {
-      emptyStateEl.hidden = false;
-      emptyStateEl.textContent = "Không tải được dữ liệu cho chủ đề này.";
-      console.error(err);
-    }
-  }
+.tab-btn:hover { color: var(--primary-dark); }
 
-  function renderCard() {
-    const card = deck[index];
-    if (!card) return;
+.tab-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
 
-    cardEl.classList.remove("flipped");
-    flipped = false;
+.tab-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 
-    deckNameEl.textContent = currentSubject;
-    deckProgressEl.textContent = `${index + 1} / ${deck.length}`;
+/* ---------- Panel (card widget, Falcon-style) ---------- */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 18px 20px 24px;
+}
 
-    qTextEl.textContent = card["Câu hỏi"] || "";
-    frontTagEl.textContent = card["Tag"] || "";
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
 
-    const imgVal = (card["Ảnh"] || "").toString().trim();
-    if (imgVal) {
-      const src = CONFIG.GITHUB_RAW_BASE.replace(/\/$/, "") + "/" + imgVal.replace(/^\//, "");
-      qImgEl.src = src;
-      qImgEl.hidden = false;
-      frontImageWrapEl.classList.remove("is-empty");
-      frontContentEl.classList.remove("no-image");
-    } else {
-      qImgEl.hidden = true;
-      qImgEl.removeAttribute("src");
-      frontImageWrapEl.classList.add("is-empty");
-      frontContentEl.classList.add("no-image");
-    }
+.deck-name {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--primary);
+}
 
-    aTextEl.textContent = card["Đáp án"] || "";
-    eTextEl.textContent = card["Giải thích"] || "";
+.deck-progress {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
 
-    const level = Math.min(5, Math.max(0, parseInt(card["Mức độ"], 10) || 0));
-    levelStarsEl.innerHTML = "";
-    for (let i = 1; i <= 5; i++) {
-      const star = document.createElement("span");
-      star.className = "star" + (i <= level ? " on" : "");
-      star.textContent = i <= level ? "★" : "☆";
-      levelStarsEl.appendChild(star);
-    }
+/* ---------- Card area ---------- */
+.card-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-    prevBtn.disabled = index === 0;
-    nextBtn.disabled = index === deck.length - 1;
-  }
+.nav-arrow {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.nav-arrow:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-dark); }
+.nav-arrow:active { transform: scale(0.94); }
+.nav-arrow:disabled { opacity: 0.35; cursor: default; }
+.nav-arrow:disabled:hover { background: var(--surface); border-color: var(--border); color: var(--text); }
+.nav-arrow:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-  function flip() {
-    flipped = !flipped;
-    cardEl.classList.toggle("flipped", flipped);
-  }
+.card {
+  flex: 1 1 auto;
+  perspective: 1600px;
+  min-height: 360px;
+  cursor: pointer;
+}
+.card:focus-visible .card-inner { outline: 2px solid var(--primary); outline-offset: 4px; }
 
-  function goNext() {
-    if (index < deck.length - 1) {
-      index++;
-      renderCard();
-    }
-  }
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  transition: transform 0.5s cubic-bezier(.4,.2,.2,1);
+  transform-style: preserve-3d;
+  border-radius: var(--radius-md);
+}
 
-  function goPrev() {
-    if (index > 0) {
-      index--;
-      renderCard();
-    }
-  }
+.card.flipped .card-inner { transform: rotateY(180deg); }
 
-  // Clicking the card flips it — except clicking the image, which opens the lightbox instead.
-  cardEl.addEventListener("click", flip);
-  cardEl.addEventListener("keydown", (e) => {
-    if (e.key === " " || e.key === "Enter") {
-      e.preventDefault();
-      flip();
-    }
-  });
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 18px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-  frontImageWrapEl.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (!qImgEl.hidden && qImgEl.src) openLightbox(qImgEl.src);
-  });
+.card-back {
+  transform: rotateY(180deg);
+  border-top: 4px solid var(--primary);
+}
 
-  nextBtn.addEventListener("click", goNext);
-  prevBtn.addEventListener("click", goPrev);
+.card-front { border-top: 4px solid var(--primary-dark); }
 
-  shuffleBtn.addEventListener("click", () => {
-    deck = shuffle(originalDeck);
-    index = 0;
-    renderCard();
-  });
+/* ---- Front face: text left / image right (stacks on mobile) ---- */
+.tag-pin {
+  align-self: flex-start;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+.tag-pin:empty { display: none; }
 
-  restartBtn.addEventListener("click", () => {
-    deck = shuffle(originalDeck);
-    index = 0;
-    renderCard();
-  });
+.front-content {
+  flex: 1;
+  display: flex;
+  gap: 18px;
+  min-height: 0;
+}
 
-  document.addEventListener("keydown", (e) => {
-    if (!lightboxEl.hidden) {
-      if (e.key === "Escape") closeLightbox();
-      return;
-    }
-    if (stageEl.hidden) return;
-    if (e.target.tagName === "BUTTON") return;
-    if (e.key === "ArrowRight") goNext();
-    if (e.key === "ArrowLeft") goPrev();
-  });
+.front-content.no-image { display: block; }
 
-  // ---------- Lightbox (zoom in/out on the illustration image) ----------
-  function openLightbox(src) {
-    lightboxImgEl.src = src;
-    zoomScale = 1;
-    applyZoom();
-    lightboxEl.hidden = false;
-  }
+.front-text {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: center;
+  overflow-y: auto;
+}
 
-  function closeLightbox() {
-    lightboxEl.hidden = true;
-    lightboxImgEl.src = "";
-  }
+.no-image .front-text {
+  height: 100%;
+  justify-content: center;
+  text-align: center;
+}
 
-  function applyZoom() {
-    lightboxImgEl.style.transform = `scale(${zoomScale})`;
-    lbZoomReset.textContent = Math.round(zoomScale * 100) + "%";
-  }
+.q-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
 
-  lbZoomIn.addEventListener("click", () => {
-    zoomScale = Math.min(4, zoomScale + 0.25);
-    applyZoom();
-  });
-  lbZoomOut.addEventListener("click", () => {
-    zoomScale = Math.max(0.5, zoomScale - 0.25);
-    applyZoom();
-  });
-  lbZoomReset.addEventListener("click", () => {
-    zoomScale = 1;
-    applyZoom();
-  });
-  lbClose.addEventListener("click", closeLightbox);
+.front-image {
+  flex: 1 1 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: zoom-in;
+}
 
-  // Click on the dark backdrop (not on the image itself) closes the lightbox
-  lightboxStageEl.addEventListener("click", (e) => {
-    if (e.target === lightboxStageEl) closeLightbox();
-  });
+.front-image.is-empty { display: none; }
 
-  // Scroll wheel to zoom while hovering the image
-  lightboxStageEl.addEventListener(
-    "wheel",
-    (e) => {
-      if (lightboxEl.hidden) return;
-      e.preventDefault();
-      zoomScale = e.deltaY < 0
-        ? Math.min(4, zoomScale + 0.15)
-        : Math.max(0.5, zoomScale - 0.15);
-      applyZoom();
-    },
-    { passive: false }
-  );
+.q-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 8px;
+}
 
-  loadSubjects();
-})();
+.zoom-hint {
+  position: absolute;
+  bottom: 6px;
+  right: 8px;
+  font-size: 0.68rem;
+  background: rgba(38,43,51,0.65);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+
+.flip-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ---- Back face ---- */
+.level-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.level-label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.level-stars { display: flex; gap: 2px; font-size: 1rem; line-height: 1; }
+.level-stars .star { color: var(--border); }
+.level-stars .star.on { color: var(--primary); }
+
+.card-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.a-label {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin: 0;
+  font-weight: 700;
+}
+
+.a-text {
+  font-family: 'Poppins', sans-serif;
+  font-size: clamp(1.1rem, 2.8vw, 1.4rem);
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.e-text {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ---------- Controls ---------- */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.ctrl-btn {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.ctrl-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+.ctrl-btn:active { transform: scale(0.97); }
+.ctrl-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.ctrl-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.ctrl-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); color: #fff; }
+
+/* ---------- Lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 33, 0.88);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.lightbox-toolbar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+}
+
+.lb-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.lb-btn:hover { background: rgba(255,255,255,0.18); }
+.lb-close { margin-left: 12px; background: var(--primary); border-color: var(--primary); }
+.lb-close:hover { background: var(--primary-dark); }
+
+.lightbox-stage {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px 30px;
+}
+
+#lightboxImg {
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center center;
+  transition: transform 0.15s ease;
+  user-select: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .front-content { flex-direction: column; }
+  .front-text, .front-image { flex: 1 1 auto; }
+  .front-image { min-height: 160px; }
+  .card, .card-inner { min-height: 460px; }
+  .topbar-inner { gap: 12px; }
+  .brand-title { font-size: 1.15rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-inner, #lightboxImg { transition: none; }
+}
