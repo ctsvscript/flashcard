@@ -3,25 +3,30 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Flashcard Ôn Tập</title>
+<title>Flashcard Ôn Tập — ĐH Y Dược Buôn Ma Thuột</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div class="board">
-    <header class="board-header">
-      <h1 class="chalk-title">Flashcard Ôn Tập</h1>
-      <p class="chalk-sub">Chọn chủ đề &rarr; lật thẻ &rarr; học thuộc</p>
-    </header>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <img class="brand-logo" src="https://raw.githubusercontent.com/vmtienbmu99/cameratest/refs/heads/main/assets/logo.png" alt="Đại học Y Dược Buôn Ma Thuột" />
+      <div class="brand-text">
+        <h1 class="brand-title">Flashcard Ôn Tập</h1>
+        <p class="brand-sub">Chọn chủ đề · lật thẻ · học thuộc</p>
+      </div>
+    </div>
+  </header>
 
+  <div class="page">
     <nav class="tabs" id="tabs" aria-label="Danh sách chủ đề">
       <div class="tabs-loading" id="tabsLoading">Đang tải danh sách chủ đề…</div>
     </nav>
 
-    <main class="stage" id="stage" hidden>
-      <div class="deck-meta">
+    <main class="panel" id="stage" hidden>
+      <div class="panel-header">
         <span class="deck-name" id="deckName"></span>
         <span class="deck-progress" id="deckProgress"></span>
       </div>
@@ -31,23 +36,34 @@
 
         <div class="card" id="card" tabindex="0" role="button" aria-label="Nhấn để lật thẻ">
           <div class="card-inner" id="cardInner">
+
             <div class="card-face card-front">
               <div class="tag-pin" id="frontTag"></div>
-              <div class="card-scroll">
-                <p class="q-text" id="qText"></p>
-                <img class="q-img" id="qImg" alt="" hidden />
+              <div class="front-content" id="frontContent">
+                <div class="front-text">
+                  <p class="q-text" id="qText"></p>
+                </div>
+                <div class="front-image" id="frontImageWrap">
+                  <img class="q-img" id="qImg" alt="Hình minh họa" hidden />
+                  <span class="zoom-hint">🔍 chạm để phóng to</span>
+                </div>
               </div>
-              <span class="flip-hint">chạm để xem đáp án</span>
+              <span class="flip-hint">chạm vào phần chữ để xem đáp án</span>
             </div>
+
             <div class="card-face card-back">
-              <div class="level-dots" id="levelDots"></div>
+              <div class="level-row">
+                <span class="level-label">Độ khó</span>
+                <span class="level-stars" id="levelStars"></span>
+              </div>
               <div class="card-scroll">
                 <p class="a-label">Đáp án</p>
                 <p class="a-text" id="aText"></p>
                 <p class="e-text" id="eText"></p>
               </div>
-              <span class="flip-hint">chạm để xem câu hỏi</span>
+              <span class="flip-hint">chạm để quay lại câu hỏi</span>
             </div>
+
           </div>
         </div>
 
@@ -55,12 +71,25 @@
       </div>
 
       <div class="controls">
-        <button class="chalk-btn" id="shuffleBtn">🔀 Xáo lại</button>
-        <button class="chalk-btn" id="restartBtn">↺ Học lại từ đầu</button>
+        <button class="ctrl-btn ctrl-primary" id="shuffleBtn">🔀 Xáo lại</button>
+        <button class="ctrl-btn" id="restartBtn">↺ Học lại từ đầu</button>
       </div>
     </main>
 
     <p class="empty-state" id="emptyState" hidden></p>
+  </div>
+
+  <!-- Lightbox: click ảnh để phóng to / thu nhỏ -->
+  <div class="lightbox" id="lightbox" hidden>
+    <div class="lightbox-toolbar">
+      <button class="lb-btn" id="lbZoomOut" aria-label="Thu nhỏ">−</button>
+      <button class="lb-btn" id="lbZoomReset" aria-label="Về kích thước gốc">100%</button>
+      <button class="lb-btn" id="lbZoomIn" aria-label="Phóng to">+</button>
+      <button class="lb-btn lb-close" id="lbClose" aria-label="Đóng">✕</button>
+    </div>
+    <div class="lightbox-stage" id="lightboxStage">
+      <img id="lightboxImg" src="" alt="Hình phóng to" />
+    </div>
   </div>
 
 <script src="config.js"></script>
